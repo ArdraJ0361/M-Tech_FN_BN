@@ -1,0 +1,28 @@
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Models and uploads must never be committed
+models/
+adapters/
+uploads/
+*.safetensors
+*.bin
+*.pt
+*.gguf
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
