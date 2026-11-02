@@ -79,6 +79,7 @@ class FakeModelService:
         self.ready = ready
         self.answer = answer
         self.unanswerable = unanswerable
+        self.truncated = False
         self.calls: list[tuple[str, str]] = []
 
     @property
@@ -109,7 +110,7 @@ class FakeModelService:
             model_name="fake-model",
             prompt_tokens=10,
             generated_tokens=2,
-            document_truncated=False,
+            document_truncated=self.truncated,
             document_chars_total=len(document_markdown),
             document_chars_used=len(document_markdown),
             device="cpu",

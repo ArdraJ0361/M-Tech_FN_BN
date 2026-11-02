@@ -2,8 +2,10 @@
 
 Flow of ``POST /answer``::
 
-    PDF + question --> structure-preserving extraction (Markdown) --> training-format prompt
-                   --> SLM (+ LoRA adapter) --> answer
+    PDF + question --> structure-preserving extraction (Markdown)
+                   --> POST {context, question} to the model server's /predict
+                       (the model server builds the prompt and runs the fine-tuned SLM)
+                   --> answer
 
 There is no retrieval, no chunking and no server-side storage: nothing is kept after the
 response is sent.
@@ -54,6 +56,7 @@ from app.schemas import (
     HealthResponse,
     TableCell,
 )
+from app.remote_model_service import RemoteModelService
 from app.structure import locate_answer
 
 logger = logging.getLogger("app")
@@ -93,7 +96,7 @@ def create_app(
         level=getattr(logging, settings.log_level.upper(), logging.INFO),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    service: AnswerGenerator = model_service or ModelService(settings)
+    service: AnswerGenerator = model_service or RemoteModelService(settings)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -253,14 +256,17 @@ def create_app(
 
         limit = settings.max_markdown_response_chars
         message: Optional[str] = None
-        if result.unanswerable:
+        if result.unanswerable and result.document_truncated:
             message = (
-                "The model judged that the document does not contain the answer."
+                "The model found no answer in the beginning of the document, which is all it "
+                "could read (about 1-2 pages). The answer may be in the part that was cut off."
             )
+        elif result.unanswerable:
+            message = "The model judged that the document does not contain the answer."
         elif result.document_truncated:
             message = (
-                "The document was longer than the model's input limit, so only its beginning "
-                "was used. The answer may be missing information from the cut-off part."
+                "The document is longer than the model can read (about 1-2 pages), so only its "
+                "beginning was used. The answer may be wrong or missing information."
             )
 
         return AnswerResponse(

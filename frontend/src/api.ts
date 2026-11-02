@@ -51,8 +51,7 @@ function extractBackendError(body: unknown): { code: string; message: string } |
   return null;
 }
 
-// The backend's generation limit is 90 s on Colab and Cloudflare tunnels cut requests at ~100 s,
-// so a request that has not finished after 150 s will not finish.
+// The backend waits up to 120 s for the model server; allow a little longer before giving up.
 export const TIMEOUTS_MS = { health: 10_000, answer: 150_000 };
 
 export function createApi(baseUrl: string, fetchImpl: typeof fetch = (...args) => fetch(...args)) {
@@ -71,13 +70,12 @@ export function createApi(baseUrl: string, fetchImpl: typeof fetch = (...args) =
     } catch (err) {
       if ((err as { name?: string }).name === "TimeoutError") {
         throw new ApiRequestError(
-          "The request timed out. The backend may be busy, or the Colab session may have stopped.",
+          "The request timed out. The backend or the model may be busy.",
           "timeout",
         );
       }
       throw new ApiRequestError(
-        "Cannot reach the backend. Check that the Colab notebook is running, the tunnel is active, " +
-          "and VITE_API_BASE_URL is correct.",
+        "Cannot reach the backend. Check that it is running and that VITE_API_BASE_URL is correct.",
         "network",
       );
     }
@@ -95,8 +93,7 @@ export function createApi(baseUrl: string, fetchImpl: typeof fetch = (...args) =
         throw new ApiRequestError(backendError.message, "http", response.status, backendError.code);
       }
       throw new ApiRequestError(
-        `The backend returned an unexpected response (HTTP ${response.status}). ` +
-          "The Colab session or the tunnel may have stopped.",
+        `The backend returned an unexpected response (HTTP ${response.status}).`,
         "invalid_response",
         response.status,
       );

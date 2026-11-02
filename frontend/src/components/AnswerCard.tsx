@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { AnswerResponse } from "../types.ts";
 import { copyToClipboard } from "../clipboard.ts";
-import { formatNumber } from "../utils.ts";
 
 interface Props {
   result: AnswerResponse | null;
@@ -51,9 +50,8 @@ export function AnswerCard({ result, asking }: Props) {
       )}
       {result.document_truncated && (
         <div className="notice notice-warn" role="status">
-          <strong>The document was too long for the model.</strong> Only the first{" "}
-          {formatNumber(result.document_chars_used)} of {formatNumber(result.document_chars_total)}{" "}
-          characters were given to the model; the end was cut off.
+          <strong>The document was too long for the model.</strong> The model reads only about 1-2
+          pages, so only the beginning was used and the rest was cut off. The answer may be wrong.
         </div>
       )}
 

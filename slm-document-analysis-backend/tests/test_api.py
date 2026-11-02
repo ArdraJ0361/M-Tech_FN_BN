@@ -80,6 +80,15 @@ def test_unanswerable_is_reported_without_locations(client, fake_model):
     assert "does not contain" in body["message"]
 
 
+def test_unanswerable_on_cut_document_warns_the_answer_may_be_in_the_cut_part(client, fake_model):
+    fake_model.answer = "unanswerable"
+    fake_model.unanswerable = True
+    fake_model.truncated = True
+    body = post(client).json()
+    assert body["unanswerable"] is True and body["document_truncated"] is True
+    assert "cut off" in body["message"]
+
+
 def test_each_request_is_independent(client, fake_model):
     post(client, data=make_pdf(["Document A talks about apples and oranges."]))
     post(client, data=make_pdf(["Document B talks about trains and planes."]))

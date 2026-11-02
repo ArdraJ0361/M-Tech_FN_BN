@@ -156,7 +156,7 @@ function BackendBanner({ backend, onRetry }: { backend: BackendState; onRetry: (
       <div className="banner banner-warn" role="alert">
         <div>
           <strong>Backend connected, but the model is not ready.</strong>{" "}
-          {health.model_error ?? "Wait for model loading to finish in the Colab notebook."}
+          {health.model_error ?? "Start the model server and click Re-check."}
           <div className="small">Questions are disabled until the model is ready.</div>
         </div>
         <button type="button" className="btn btn-small" onClick={onRetry}>Re-check</button>
@@ -166,7 +166,6 @@ function BackendBanner({ backend, onRetry }: { backend: BackendState; onRetry: (
   return (
     <div className="banner banner-ok" role="status">
       Backend connected. Model ready: <strong>{health.model_name ?? "unknown"}</strong>
-      {health.device ? ` (device: ${health.device})` : ""}
     </div>
   );
 }

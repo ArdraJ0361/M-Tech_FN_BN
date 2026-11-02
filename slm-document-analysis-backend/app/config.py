@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Optional
+from urllib.parse import urlparse
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,7 +26,15 @@ class Settings(BaseSettings):
         protected_namespaces=(),
     )
 
-    # --- Model ---------------------------------------------------------------
+    # --- Model server (the app calls POST /predict on it) -----------------------
+    # The fine-tuned model runs as its own local server (see the model repo's
+    # scripts/start_server.sh). It builds the prompt itself; this app only sends the
+    # extracted document text ("context") and the question.
+    model_server_url: str = "http://127.0.0.1:8765"
+    # Only needed if the model server was started with SERVING_API_KEY. Sent as X-API-Key.
+    model_server_api_key: Optional[str] = None
+
+    # --- In-process model (legacy; not used by the app any more) ---------------
     # Hugging Face model id or local directory of the BASE model used in training.
     model_name_or_path: Optional[str] = None
     # Directory containing the saved LoRA adapter (adapter_config.json, ...).
@@ -68,8 +77,24 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     log_level: str = "INFO"
 
+    @field_validator("model_server_url")
+    @classmethod
+    def _check_model_server_url(cls, value: str) -> str:
+        value = value.strip().rstrip("/")
+        parsed = urlparse(value)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("MODEL_SERVER_URL must be an http(s) URL")
+        # Plain HTTP is only acceptable on the local machine; anything else must use TLS.
+        if parsed.scheme == "http" and parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
+            raise ValueError("MODEL_SERVER_URL must use https unless it points to localhost")
+        return value
+
     @field_validator(
-        "model_name_or_path", "adapter_path", "tokenizer_name_or_path", mode="before"
+        "model_name_or_path",
+        "adapter_path",
+        "tokenizer_name_or_path",
+        "model_server_api_key",
+        mode="before",
     )
     @classmethod
     def _blank_to_none(cls, value: object) -> object:

@@ -75,16 +75,16 @@ class AnswerResponse(BaseModel):
     message: Optional[str] = None
     model_name: str
     inference_time_seconds: float
-    prompt_tokens: int
-    generated_tokens: int
+    prompt_tokens: Optional[int] = Field(None, description="Not reported by the model server.")
+    generated_tokens: Optional[int] = Field(None, description="Not reported by the model server.")
 
     document: DocumentInfo
     document_truncated: bool = Field(
         description="True when the document did not fit the model's input limit and its "
         "END was cut. The model then answered from the beginning only."
     )
-    document_chars_used: int
-    document_chars_total: int
+    document_chars_used: Optional[int] = Field(None, description="Not reported by the model server.")
+    document_chars_total: Optional[int] = Field(None, description="Not reported by the model server.")
 
     structured_text: str = Field(description="The Markdown given to the model (bounded).")
     structured_text_truncated: bool

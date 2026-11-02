@@ -41,18 +41,19 @@ export interface AnswerLocation {
 export interface AnswerResponse {
   question: string;
   answer: string;
-  /** The model produced its training label "unanswerable". */
+  /** The model answered "unanswerable". */
   unanswerable: boolean;
   message?: string | null;
   model_name: string;
   inference_time_seconds: number;
-  prompt_tokens: number;
-  generated_tokens: number;
+  /** Not reported by the model server, so null. */
+  prompt_tokens?: number | null;
+  generated_tokens?: number | null;
   document: DocumentInfo;
-  /** The document exceeded the model's input limit and its END was cut. */
+  /** The document exceeded what the model can read and its END was cut. */
   document_truncated: boolean;
-  document_chars_used: number;
-  document_chars_total: number;
+  document_chars_used?: number | null;
+  document_chars_total?: number | null;
   /** The Markdown that was given to the model (bounded by the backend). */
   structured_text: string;
   structured_text_truncated: boolean;

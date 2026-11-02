@@ -66,11 +66,11 @@ class GenerationResult:
     answer: str                 # first line of the generated text (may be "unanswerable")
     unanswerable: bool          # the model produced the training target "unanswerable"
     model_name: str
-    prompt_tokens: int
-    generated_tokens: int
+    prompt_tokens: Optional[int]      # None when the model server does not report it
+    generated_tokens: Optional[int]   # None when the model server does not report it
     document_truncated: bool    # the document text had to be shortened to fit the model
-    document_chars_total: int
-    document_chars_used: int
+    document_chars_total: Optional[int]
+    document_chars_used: Optional[int]
     device: str
     dtype: str
 
